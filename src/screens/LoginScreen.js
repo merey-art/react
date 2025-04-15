@@ -17,18 +17,36 @@ export default function LoginScreen({ navigation }) {
             });
 
             const token = response.data?.data?.access_token;
-            await AsyncStorage.setItem('token', token);
-            navigation.navigate('Messages');
+            if (token) {
+                await AsyncStorage.setItem('token', token);
+                await AsyncStorage.setItem('email', email);
+                navigation.replace('MainTabs');
+            } else {
+                Alert.alert('Ошибка авторизации', 'Токен не получен');
+            }
         } catch (error) {
             Alert.alert('Ошибка авторизации', error.response?.data?.error?.msg || 'Не удалось войти');
         }
     };
 
     return (
-        <View style={{ padding: 20 }}>
-            <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
-            <TextInput placeholder="Пароль" value={password} onChangeText={setPassword} secureTextEntry />
-            <Button title="Войти" onPress={login} />
-        </View>
+      <View style={{ padding: 20 }}>
+          <TextInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={{ marginBottom: 10 }}
+          />
+          <TextInput
+            placeholder="Пароль"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={{ marginBottom: 20 }}
+          />
+          <Button title="Войти" onPress={login} />
+      </View>
     );
 }
