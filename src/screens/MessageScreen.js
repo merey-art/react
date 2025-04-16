@@ -79,7 +79,7 @@ export default function MessageScreen() {
         for (let i = 1; i < sorted.length; i++) {
           if (sorted[i].device_id === sorted[i - 1].device_id) {
             sorted[i].usage = sorted[i].in1 !== null && sorted[i - 1].in1 !== null
-              ? sorted[i - 1].in1 - sorted[i].in1
+              ? sorted[i].in1 - sorted[i - 1].in1
               : null;
           } else {
             sorted[i].usage = null;
