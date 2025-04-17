@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Button, FlatList, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -51,7 +51,7 @@ export default function UsersScreen() {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await axios.post(`${BASE_URL}/api/company/users`, {}, {
@@ -61,11 +61,11 @@ export default function UsersScreen() {
     } catch (err) {
       console.log('Ошибка загрузки пользователей', err.message);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 20 }}>
