@@ -95,29 +95,53 @@ export default function MessageScreen() {
       }
     }
 
-    setMessages(allMessages);
+    let grouped = {};
+    for (const msg of allMessages) {
+      if (!grouped[msg.device_id]) {
+        grouped[msg.device_id] = {
+          name: msg.name,
+          messages: [],
+          totalUsage: 0,
+        };
+      }
+      grouped[msg.device_id].messages.push(msg);
+      if (typeof msg.usage === 'number' && msg.usage > 0) {
+        grouped[msg.device_id].totalUsage += msg.usage;
+      }
+    }
+
+    const TARIFF = 120;
+    Object.values(grouped).forEach((group) => {
+      group.totalCost = group.totalUsage * TARIFF;
+    });
+
+    setMessages(Object.values(grouped));
     setLoading(false);
   };
 
   const exportToExcel = async () => {
     if (!messages.length) return;
 
-    const data = messages.map((msg) => ({
-      Название: msg.name,
-      Показания: msg.in1,
-      Расход: msg.usage,
-      RSSI: msg.rssi,
-      'Дата и время': msg.datetime_at_hour,
-    }));
+    const rows = [];
+    messages.forEach((group) => {
+      rows.push({ 'Прибор ID': group.messages[0].device_id });
+      group.messages.forEach((msg) => {
+        rows.push({
+          Показания: msg.in1,
+          Расход: msg.usage,
+          'Дата и время': msg.datetime_at_hour,
+        });
+      });
+      rows.push({ 'Суммарный расход': group.totalUsage, 'Стоимость (₸)': group.totalCost });
+      rows.push({});
+    });
 
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Messages');
 
     const wbout = XLSX.write(wb, { type: 'binary', bookType: 'xlsx' });
-
-    const path = `${RNFS.DownloadDirectoryPath}/metering_data.xlsx`;
-
+    const path = `${RNFS.DownloadDirectoryPath}/metering_data_grouped.xlsx`;
     await RNFS.writeFile(path, wbout, 'ascii');
     alert(`Файл сохранён: ${path}`);
   };
@@ -160,9 +184,16 @@ export default function MessageScreen() {
             data={messages}
             keyExtractor={(_, i) => i.toString()}
             renderItem={({ item }) => (
-              <Text>
-                Название: {item.name}, Показания: {item.in1}, Расход: {item.usage ?? '—'}, Дата: {item.datetime_at_hour}
-              </Text>
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontWeight: 'bold' }}>Прибор ID: {item.messages[0].device_id}</Text>
+                {item.messages.map((msg, idx) => (
+                  <Text key={idx}>
+                    [{msg.in1}] [{msg.usage ?? '—'}] [{msg.datetime_at_hour}]
+                  </Text>
+                ))}
+                <Text>Суммарный расход: {item.totalUsage.toFixed(2)}</Text>
+                <Text>Стоимость: {item.totalCost.toFixed(2)} ₸</Text>
+              </View>
             )}
           />
           <Button title="Выгрузить в Excel" onPress={exportToExcel} />
