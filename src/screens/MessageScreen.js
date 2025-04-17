@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, Button, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, FlatList, Button, ActivityIndicator, Platform, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNFS from 'react-native-fs';
@@ -18,6 +18,7 @@ export default function MessageScreen() {
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
   const [deviceMap, setDeviceMap] = useState({});
+  const [highlightThreshold, setHighlightThreshold] = useState(1);
 
   const toUnix = (date) => Math.floor(date.getTime() / 1000);
 
@@ -172,6 +173,13 @@ export default function MessageScreen() {
             }}
           />
         )}
+        <TextInput
+          style={{ borderWidth: 1, marginVertical: 10, padding: 5 }}
+          keyboardType="numeric"
+          placeholder="Порог для подсветки (delta_in1)"
+          value={highlightThreshold.toString()}
+          onChangeText={(text) => setHighlightThreshold(parseFloat(text) || 0)}
+        />
         <Button title="Получить данные" onPress={getMessages} />
       </View>
 
@@ -187,7 +195,10 @@ export default function MessageScreen() {
                 <Text style={{ fontWeight: 'bold' }}>Серийный номер: {item.serial}</Text>
                 <Text style={{ fontStyle: 'italic' }}>Адрес: {item.address}</Text>
                 {item.messages.map((msg, idx) => (
-                  <Text key={idx}>
+                  <Text
+                    key={idx}
+                    style={{ color: msg.delta_in1 > highlightThreshold ? 'red' : 'black' }}
+                  >
                     [{msg.in1}] [{msg.delta_in1 ?? '—'}] [{msg.datetime_at_hour}]
                   </Text>
                 ))}
