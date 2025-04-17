@@ -1,79 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Button, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, FlatList, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-export default function UserScreen({ navigation }) {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const BASE_URL = 'https://metering.beeline.kz:4443';
+
+export default function UsersScreen() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [objectId, setObjectId] = useState('');
+  const [userId, setUserId] = useState('');
+  const [users, setUsers] = useState([]);
+
+  const getToken = async () => await AsyncStorage.getItem('token');
+
+  const createUser = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.post(`${BASE_URL}/api/user/create`, {
+        name,
+        email,
+        password,
+        password_confirmation: password,
+        user_time_zone: 5,
+        access_group_id: 1
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      Alert.alert('Пользователь создан', `ID: ${res.data?.data?.id}`);
+      setUserId(res.data?.data?.id?.toString() || '');
+      fetchUsers();
+    } catch (err) {
+      Alert.alert('Ошибка', err.response?.data?.error?.msg || 'Ошибка создания пользователя');
+    }
+  };
+
+  const tieUserToObject = async () => {
+    try {
+      const token = await getToken();
+      await axios.post(`${BASE_URL}/api/objects/tie_users`, {
+        object_id: objectId,
+        user_ids: [parseInt(userId)]
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      Alert.alert('Пользователь привязан к объекту');
+    } catch (err) {
+      Alert.alert('Ошибка привязки', err.response?.data?.error?.msg || 'Ошибка привязки пользователя');
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.post(`${BASE_URL}/api/company/users`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(res.data?.data?.users || []);
+    } catch (err) {
+      console.log('Ошибка загрузки пользователей', err.message);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const userEmail = await AsyncStorage.getItem('email');
-        setEmail(userEmail);
-
-        const res = await axios.post(
-          'https://metering.beeline.kz:4443/api/company/users',
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: 'application/json',
-              'X-CSRF-TOKEN': '',
-            },
-          }
-        );
-
-        const usersData = res.data?.data?.users || [];
-        setUsers(usersData);
-      } catch (err) {
-        Alert.alert('Ошибка', 'Не удалось загрузить список пользователей');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
 
-  const logout = async () => {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('email');
-    navigation.replace('Login');
-  };
-
-  const renderItem = ({ item }) => (
-    <View style={{ marginBottom: 15 }}>
-      <Text>👤 {item.name}</Text>
-      <Text>📧 {item.email}</Text>
-      {item.job_title && <Text>💼 {item.job_title}</Text>}
-      {item.phone_number && <Text>📞 {item.phone_number}</Text>}
-      {item.company_title && <Text>🏢 {item.company_title}</Text>}
-    </View>
-  );
-
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 16, marginBottom: 10 }}>
-        Вы вошли как: {email}
-      </Text>
-      <Button title="Выйти" onPress={logout} />
+    <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <Text>Имя</Text>
+      <TextInput value={name} onChangeText={setName} style={{ borderWidth: 1, marginBottom: 10 }} />
 
-      <Text style={{ fontSize: 18, marginVertical: 20 }}>Сотрудники компании:</Text>
+      <Text>Email</Text>
+      <TextInput value={email} onChangeText={setEmail} style={{ borderWidth: 1, marginBottom: 10 }} />
 
-      {loading ? (
-        <Text>Загрузка...</Text>
-      ) : (
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-        />
-      )}
-    </View>
+      <Text>Пароль</Text>
+      <TextInput value={password} onChangeText={setPassword} secureTextEntry style={{ borderWidth: 1, marginBottom: 10 }} />
+
+      <Button title="Создать пользователя" onPress={createUser} />
+
+      <Text style={{ marginTop: 20 }}>ID созданного пользователя</Text>
+      <TextInput value={userId} onChangeText={setUserId} style={{ borderWidth: 1, marginBottom: 10 }} />
+
+      <Text>Object ID</Text>
+      <TextInput value={objectId} onChangeText={setObjectId} style={{ borderWidth: 1, marginBottom: 10 }} />
+
+      <Button title="Привязать пользователя к объекту" onPress={tieUserToObject} />
+
+      <Text style={{ marginVertical: 20, fontWeight: 'bold' }}>Пользователи компании</Text>
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <Text style={{ marginBottom: 5 }}>
+            {item.name} | ID: {item.id} | {item.email}
+          </Text>
+        )}
+      />
+    </ScrollView>
   );
 }
