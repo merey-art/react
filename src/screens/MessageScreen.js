@@ -33,7 +33,11 @@ export default function MessageScreen() {
       const devices = res.data?.data?.metering_devices || [];
       const map = {};
       for (const d of devices) {
-        map[d.id] = d.name;
+        map[d.id] = {
+          name: d.name,
+          serial: d.deviceID,
+          address: d.address?.unrestricted_value || '—',
+        };
       }
       setDeviceMap(map);
       return devices.map((d) => d.id);
@@ -73,21 +77,11 @@ export default function MessageScreen() {
           .sort((a, b) => new Date(a.datetime_at_hour) - new Date(b.datetime_at_hour))
           .map((entry) => ({
             ...entry,
-            name: deviceMap[entry.device_id] || 'Неизвестно',
+            name: deviceMap[entry.device_id]?.name || '—',
+            serial: deviceMap[entry.device_id]?.serial || '—',
+            address: deviceMap[entry.device_id]?.address || '—',
+            delta_in1: entry.delta_in1 ?? null,
           }));
-
-        for (let i = 1; i < sorted.length; i++) {
-          if (sorted[i].device_id === sorted[i - 1].device_id) {
-            sorted[i].usage = sorted[i].in1 !== null && sorted[i - 1].in1 !== null
-              ? sorted[i].in1 - sorted[i - 1].in1
-              : null;
-          } else {
-            sorted[i].usage = null;
-          }
-        }
-        if (sorted.length) {
-          sorted[0].usage = null;
-        }
 
         allMessages.push(...sorted);
       } catch (err) {
@@ -100,13 +94,15 @@ export default function MessageScreen() {
       if (!grouped[msg.device_id]) {
         grouped[msg.device_id] = {
           name: msg.name,
+          serial: msg.serial,
+          address: msg.address,
           messages: [],
           totalUsage: 0,
         };
       }
       grouped[msg.device_id].messages.push(msg);
-      if (typeof msg.usage === 'number' && msg.usage > 0) {
-        grouped[msg.device_id].totalUsage += msg.usage;
+      if (typeof msg.delta_in1 === 'number' && msg.delta_in1 > 0) {
+        grouped[msg.device_id].totalUsage += msg.delta_in1;
       }
     }
 
@@ -124,11 +120,14 @@ export default function MessageScreen() {
 
     const rows = [];
     messages.forEach((group) => {
-      rows.push({ 'Прибор ID': group.messages[0].device_id });
+      rows.push({
+        'Серийный номер': group.serial,
+        'Адрес': group.address,
+      });
       group.messages.forEach((msg) => {
         rows.push({
           Показания: msg.in1,
-          Расход: msg.usage,
+          'delta_in1': msg.delta_in1,
           'Дата и время': msg.datetime_at_hour,
         });
       });
@@ -185,10 +184,11 @@ export default function MessageScreen() {
             keyExtractor={(_, i) => i.toString()}
             renderItem={({ item }) => (
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontWeight: 'bold' }}>Прибор ID: {item.messages[0].device_id}</Text>
+                <Text style={{ fontWeight: 'bold' }}>Серийный номер: {item.serial}</Text>
+                <Text style={{ fontStyle: 'italic' }}>Адрес: {item.address}</Text>
                 {item.messages.map((msg, idx) => (
                   <Text key={idx}>
-                    [{msg.in1}] [{msg.usage ?? '—'}] [{msg.datetime_at_hour}]
+                    [{msg.in1}] [{msg.delta_in1 ?? '—'}] [{msg.datetime_at_hour}]
                   </Text>
                 ))}
                 <Text>Суммарный расход: {item.totalUsage.toFixed(2)}</Text>
