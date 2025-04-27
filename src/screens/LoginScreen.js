@@ -1,4 +1,3 @@
-// 🔹 FILE: src/screens/LoginScreen.js (обновлённый с получением access_token из data)
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -44,7 +43,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Логин"
-          placeh olderTextColor="#999"
+          placeholderTextColor="#999"
           value={login}
           onChangeText={setLogin}
         />
@@ -70,8 +69,12 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.linksRow}>
-        <TouchableOpacity><Text style={styles.linkText}>Регистрация</Text></TouchableOpacity>
-        <TouchableOpacity><Text style={styles.linkText}>Забыл пароль?</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.replace('SignupScreen')}>
+          <Text style={styles.linkText}>Регистрация</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.replace('ResetPasswordScreen')}>
+          <Text style={styles.linkText}>Забыл пароль?</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

@@ -1,19 +1,20 @@
-// 🔹 FILE: App.js (с добавленным AnalyticsProvider)
+// 🔹 FILE: App.js (обновлённый с навигацией регистрации и восстановления пароля)
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import LoginScreen from './src/screens/LoginScreen';
+import SignupScreen from './src/screens/SignupScreen';
+import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 import MessageScreen from './src/screens/MessageScreen';
 import UserScreen from './src/screens/UserScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import { AnalyticsProvider } from './src/context/AnalyticsContext';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Вкладки после авторизации
 function MainTabs() {
   return (
     <Tab.Navigator>
@@ -24,13 +25,14 @@ function MainTabs() {
   );
 }
 
-// Основной компонент приложения
 export default function App() {
   return (
     <AnalyticsProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Navigator initialRouteName="LoginScreen" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="LoginScreen" component={LoginScreen} />
+          <Stack.Screen name="SignupScreen" component={SignupScreen} />
+          <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
           <Stack.Screen name="MainTabs" component={MainTabs} />
         </Stack.Navigator>
       </NavigationContainer>

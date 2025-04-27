@@ -8,6 +8,7 @@ import { AnalyticsContext } from '../context/AnalyticsContext';
 
 const BASE_URL = 'https://metering.beeline.kz:4443';
 const DEVICE_LIST_ENDPOINT = '/api/device/metering_devices';
+const DEVICE_DETAIL_ENDPOINT = '/api/device/metering_device/';
 const DEVICE_MESSAGES_ENDPOINT = '/api/device/messages';
 
 export default function MessageScreen() {
@@ -25,6 +26,19 @@ export default function MessageScreen() {
   const toUnix = (date) => Math.floor(date.getTime() / 1000);
   const getToken = async () => await AsyncStorage.getItem('token');
 
+  const getDeviceName = async (deviceId, token) => {
+    try {
+      const res = await axios.post(
+        BASE_URL + DEVICE_DETAIL_ENDPOINT + deviceId,
+        { only: ['name'] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data?.data?.metering_device?.name || '—';
+    } catch {
+      return '—';
+    }
+  };
+
   const getAllDevices = async (token) => {
     try {
       const res = await axios.post(BASE_URL + DEVICE_LIST_ENDPOINT, { paginate: false }, {
@@ -33,8 +47,9 @@ export default function MessageScreen() {
       const devices = res.data?.data?.metering_devices || [];
       const map = {};
       for (const d of devices) {
+        const name = await getDeviceName(d.id, token);
         map[d.id] = {
-          name: d.name,
+          name,
           meter_number: d.deviceID,
           address: d.address?.unrestricted_value || '—',
         };
