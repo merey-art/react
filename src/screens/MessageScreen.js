@@ -1,14 +1,14 @@
 // 🔹 FILE: src/screens/MessageScreen.js
 import React, { useState, useContext } from 'react';
-import { View, Text, FlatList, Button, ActivityIndicator, Platform, TextInput } from 'react-native';
+import { View, Text, FlatList, Button, Platform, TextInput, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { AnalyticsContext } from '../context/AnalyticsContext';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const BASE_URL = 'https://metering.beeline.kz:4443';
 const DEVICE_LIST_ENDPOINT = '/api/device/metering_devices';
-const DEVICE_DETAIL_ENDPOINT = '/api/device/metering_device/';
 const DEVICE_MESSAGES_ENDPOINT = '/api/device/messages';
 
 export default function MessageScreen() {
@@ -26,19 +26,6 @@ export default function MessageScreen() {
   const toUnix = (date) => Math.floor(date.getTime() / 1000);
   const getToken = async () => await AsyncStorage.getItem('token');
 
-  const getDeviceName = async (deviceId, token) => {
-    try {
-      const res = await axios.post(
-        BASE_URL + DEVICE_DETAIL_ENDPOINT + deviceId,
-        { only: ['name'] },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return res.data?.data?.metering_device?.name || '—';
-    } catch {
-      return '—';
-    }
-  };
-
   const getAllDevices = async (token) => {
     try {
       const res = await axios.post(BASE_URL + DEVICE_LIST_ENDPOINT, { paginate: false }, {
@@ -47,9 +34,8 @@ export default function MessageScreen() {
       const devices = res.data?.data?.metering_devices || [];
       const map = {};
       for (const d of devices) {
-        const name = await getDeviceName(d.id, token);
         map[d.id] = {
-          name,
+          name: d.name || '—',
           meter_number: d.deviceID,
           address: d.address?.unrestricted_value || '—',
         };
@@ -170,7 +156,16 @@ export default function MessageScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" />
+        <SkeletonPlaceholder>
+          <SkeletonPlaceholder.Item marginTop={10}>
+            {[...Array(3)].map((_, idx) => (
+              <SkeletonPlaceholder.Item key={idx} marginBottom={20}>
+                <SkeletonPlaceholder.Item width="80%" height={20} borderRadius={4} />
+                <SkeletonPlaceholder.Item marginTop={6} width="60%" height={20} borderRadius={4} />
+              </SkeletonPlaceholder.Item>
+            ))}
+          </SkeletonPlaceholder.Item>
+        </SkeletonPlaceholder>
       ) : (
         <FlatList
           data={messages}

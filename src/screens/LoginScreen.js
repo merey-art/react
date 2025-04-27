@@ -1,3 +1,4 @@
+// 🔹 FILE: src/screens/LoginScreen.js (обновлённый с таймером и датой логина)
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -24,8 +25,10 @@ export default function LoginScreen() {
 
       const token = response.data?.data?.access_token;
       if (token) {
+        const now = Date.now();
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('email', login.trim());
+        await AsyncStorage.setItem('login_time', now.toString());
         navigation.replace('MainTabs');
       } else {
         Alert.alert('Ошибка авторизации', 'Токен не получен');
