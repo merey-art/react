@@ -44,7 +44,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Логин"
-          placeholderTextColor="#999"
+          placeh olderTextColor="#999"
           value={login}
           onChangeText={setLogin}
         />

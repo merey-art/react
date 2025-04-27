@@ -35,7 +35,7 @@ export default function MessageScreen() {
       for (const d of devices) {
         map[d.id] = {
           name: d.name,
-          serial: d.deviceID,
+          meter_number: d.deviceID,
           address: d.address?.unrestricted_value || '—',
         };
       }
@@ -78,7 +78,7 @@ export default function MessageScreen() {
           .map((entry) => ({
             ...entry,
             name: deviceMap[entry.device_id]?.name || '—',
-            serial: deviceMap[entry.device_id]?.serial || '—',
+            meter_number: deviceMap[entry.device_id]?.meter_number || '—',
             address: deviceMap[entry.device_id]?.address || '—',
             delta_in1: entry.delta_in1 ?? null,
           }));
@@ -94,7 +94,7 @@ export default function MessageScreen() {
       if (!grouped[msg.device_id]) {
         grouped[msg.device_id] = {
           name: msg.name,
-          serial: msg.serial,
+          meter_number: msg.meter_number,
           address: msg.address,
           messages: [],
           totalUsage: 0,
@@ -162,7 +162,7 @@ export default function MessageScreen() {
           keyExtractor={(_, i) => i.toString()}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontWeight: 'bold' }}>Серийный номер: {item.serial}</Text>
+              <Text style={{ fontWeight: 'bold' }}>Серийный номер: {item.meter_number}</Text>
               <Text style={{ fontStyle: 'italic' }}>Адрес: {item.address}</Text>
               {item.messages.map((msg, idx) => (
                 <Text
