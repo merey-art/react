@@ -1,4 +1,4 @@
-// 🔹 FILE: src/screens/MessageScreen.js
+// 🔹 FILE: src/screens/MessageScreen.js (обновление на использование datetime и meter_number)
 import React, { useState, useContext } from 'react';
 import { View, Text, FlatList, Button, Platform, TextInput, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6,9 +6,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { AnalyticsContext } from '../context/AnalyticsContext';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import moment from 'moment';
 
 const BASE_URL = 'https://metering.beeline.kz:4443';
-const DEVICE_LIST_ENDPOINT = '/api/device/metering_devices';
 const DEVICE_MESSAGES_ENDPOINT = '/api/device/messages';
 
 export default function MessageScreen() {
@@ -18,7 +18,6 @@ export default function MessageScreen() {
   const [endDate, setEndDate] = useState(new Date());
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
-  const [deviceMap, setDeviceMap] = useState({});
   const [highlightThreshold, setHighlightThreshold] = useState(1);
 
   const { setAnalyticsData } = useContext(AnalyticsContext);
@@ -26,84 +25,55 @@ export default function MessageScreen() {
   const toUnix = (date) => Math.floor(date.getTime() / 1000);
   const getToken = async () => await AsyncStorage.getItem('token');
 
-  const getAllDevices = async (token) => {
-    try {
-      const res = await axios.post(BASE_URL + DEVICE_LIST_ENDPOINT, { paginate: false }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const devices = res.data?.data?.metering_devices || [];
-      const map = {};
-      for (const d of devices) {
-        map[d.id] = {
-          name: d.name || '—',
-          meter_number: d.deviceID,
-          address: d.address?.unrestricted_value || '—',
-        };
-      }
-      setDeviceMap(map);
-      return devices.map((d) => d.id);
-    } catch {
-      return [];
-    }
-  };
-
   const getMessages = async () => {
     setLoading(true);
     const token = await getToken();
     if (!token) return;
 
-    const deviceIds = await getAllDevices(token);
     const headers = { Authorization: `Bearer ${token}` };
     let allMessages = [];
 
-    for (const device_id of deviceIds) {
-      const payload = {
-        device_id,
-        msgType: 1,
-        msgGroup: 0,
-        startDate: toUnix(startDate),
-        stopDate: toUnix(endDate),
-        paginate: true,
-        per_page: 100,
-        profile_type: 0,
-        with_transformation_ratio: true,
-        with_loss_factor: true,
-      };
+    const payload = {
+      msgType: 1,
+      msgGroup: 0,
+      startDate: toUnix(startDate),
+      stopDate: toUnix(endDate),
+      paginate: true,
+      per_page: 100,
+      profile_type: 0,
+      with_transformation_ratio: true,
+      with_loss_factor: true,
+    };
 
-      try {
-        const res = await axios.post(BASE_URL + DEVICE_MESSAGES_ENDPOINT, payload, { headers });
-        const data = res.data?.data?.messages?.data || [];
+    try {
+      const res = await axios.post(BASE_URL + DEVICE_MESSAGES_ENDPOINT, payload, { headers });
+      const data = res.data?.data?.messages?.data || [];
 
-        const sorted = data
-          .sort((a, b) => new Date(a.datetime_at_hour) - new Date(b.datetime_at_hour))
-          .map((entry) => ({
-            ...entry,
-            name: deviceMap[entry.device_id]?.name || '—',
-            meter_number: entry.meter_number?.toString() || '—',
-            address: deviceMap[entry.device_id]?.address || '—',
-            delta_in1: entry.delta_in1 ?? null,
-          }));
+      const sorted = data
+        .sort((a, b) => (a.datetime || 0) - (b.datetime || 0))
+        .map((entry) => ({
+          ...entry,
+          name: '—',
+          meter_number: entry.meter_number?.toString() || '—',
+        }));
 
-        allMessages.push(...sorted);
-      } catch (err) {
-        console.log(`Ошибка получения данных по устройству ${device_id}:`, err.message);
-      }
+      allMessages.push(...sorted);
+    } catch (err) {
+      console.log('Ошибка получения сообщений:', err.message);
     }
 
     let grouped = {};
     for (const msg of allMessages) {
-      if (!grouped[msg.device_id]) {
-        grouped[msg.device_id] = {
-          name: msg.name,
+      if (!grouped[msg.meter_number]) {
+        grouped[msg.meter_number] = {
           meter_number: msg.meter_number,
-          address: msg.address,
           messages: [],
           totalUsage: 0,
         };
       }
-      grouped[msg.device_id].messages.push(msg);
+      grouped[msg.meter_number].messages.push(msg);
       if (typeof msg.delta_in1 === 'number' && msg.delta_in1 > 0) {
-        grouped[msg.device_id].totalUsage += msg.delta_in1;
+        grouped[msg.meter_number].totalUsage += msg.delta_in1;
       }
     }
 
@@ -173,16 +143,19 @@ export default function MessageScreen() {
           renderItem={({ item }) => (
             <View style={{ marginBottom: 20 }}>
               <Text style={{ fontWeight: 'bold' }}>Серийный номер: {item.meter_number}</Text>
-              <Text style={{ fontStyle: 'italic' }}>Адрес: {item.address}</Text>
-              {item.messages.map((msg, idx) => (
-                <Text
-                  key={idx}
-                  style={{ color: msg.delta_in1 > highlightThreshold ? 'red' : 'black' }}
-                >
-                  [{msg.in1}] [{msg.delta_in1 ?? '—'}] [{msg.datetime_at_hour}]
-                </Text>
-              ))}
-              <Text>Суммарный расход: {item.totalUsage.toFixed(2)}</Text>
+              {item.messages.map((msg, idx) => {
+                const date = msg.datetime ? moment.unix(msg.datetime).format('DD.MM.YYYY HH:mm') : '—';
+                const delta = msg.delta_in1 ?? (idx > 0 ? (msg.in1 - item.messages[idx - 1].in1).toFixed(2) : '—');
+                return (
+                  <Text
+                    key={idx}
+                    style={{ color: delta > highlightThreshold ? 'red' : 'black' }}
+                  >
+                    [{date}] | in1: {msg.in1} | delta_in1: {delta}
+                  </Text>
+                );
+              })}
+              <Text>Суммарный расход: {item.totalUsage.toFixed(2)} м³</Text>
               <Text>Стоимость: {item.totalCost.toFixed(2)} ₸</Text>
             </View>
           )}

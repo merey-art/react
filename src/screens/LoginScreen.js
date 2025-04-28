@@ -1,4 +1,4 @@
-// 🔹 FILE: src/screens/LoginScreen.js (обновлённый с таймером и датой логина)
+// 🔹 FILE: src/screens/LoginScreen.js (исправленная навигация)
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -72,10 +72,10 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.linksRow}>
-        <TouchableOpacity onPress={() => navigation.replace('SignupScreen')}>
+        <TouchableOpacity onPress={() => navigation.navigate('SignupScreen')}>
           <Text style={styles.linkText}>Регистрация</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.replace('ResetPasswordScreen')}>
+        <TouchableOpacity onPress={() => navigation.navigate('ResetPasswordScreen')}>
           <Text style={styles.linkText}>Забыл пароль?</Text>
         </TouchableOpacity>
       </View>

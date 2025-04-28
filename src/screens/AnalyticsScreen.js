@@ -1,7 +1,8 @@
+// 🔹 FILE: src/screens/AnalyticsScreen.js (обновлённый)
 import React, { useContext, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, Button, Modal } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { VictoryBar, VictoryChart, VictoryTheme, VictoryAxis, VictoryLabel, VictoryLine } from 'victory-native';
+import { VictoryBar, VictoryChart, VictoryTheme, VictoryAxis, VictoryLabel } from 'victory-native';
 import { AnalyticsContext } from '../context/AnalyticsContext';
 import moment from 'moment';
 
@@ -13,14 +14,13 @@ const AnalyticsScreen = () => {
   const [endDate, setEndDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [pickingStart, setPickingStart] = useState(true);
-  const [selectedDatum, setSelectedDatum] = useState(null);
 
   const aggregatedData = useMemo(() => {
     const grouped = {};
     analyticsData.forEach((msg) => {
-      if (!msg.datetime_at_hour || typeof msg.in1 !== 'number') return;
-      const msgDate = moment(msg.datetime_at_hour);
-      if (msgDate.isBefore(startDate) || msgDate.isAfter(endDate)) return;
+      if (typeof msg.datetime !== 'number' || typeof msg.in1 !== 'number') return;
+      const msgDate = moment.unix(msg.datetime);
+      if (msgDate.isBefore(moment(startDate).startOf('day')) || msgDate.isAfter(moment(endDate).endOf('day'))) return;
       const date = msgDate.format('YYYY-MM-DD');
       grouped[date] = (grouped[date] || 0) + msg.in1;
     });
@@ -47,7 +47,7 @@ const AnalyticsScreen = () => {
       setPickingStart(false);
     } else {
       if (selectedDate < startDate) {
-        Alert.alert('Ошибка', 'Конечная дата не может быть раньше начальной.');
+        alert('Конечная дата не может быть раньше начальной.');
         setEndDate(startDate);
       } else {
         setEndDate(selectedDate);
@@ -90,10 +90,6 @@ const AnalyticsScreen = () => {
           tickFormat={(t) => `${t} м³`}
           style={{ tickLabels: { fontSize: 10, padding: 5 } }}
         />
-        <VictoryLine
-          y={() => average}
-          style={{ data: { stroke: '#FF0000', strokeWidth: 2, strokeDasharray: '5,5' } }}
-        />
         <VictoryBar
           data={aggregatedData}
           x="date"
@@ -107,22 +103,8 @@ const AnalyticsScreen = () => {
               cornerRadius: { top: 6, bottom: 0 }
             }
           }}
-          events={[{
-            target: "data",
-            eventHandlers: {
-              onPressIn: (evt, clickedProps) => {
-                setSelectedDatum(clickedProps.datum);
-              }
-            }
-          }]}
         />
       </VictoryChart>
-      {selectedDatum && (
-        <View style={styles.selectedInfo}>
-          <Text>Дата: {moment(selectedDatum.date).format('DD.MM.YYYY')}</Text>
-          <Text>Потребление: {selectedDatum.value.toFixed(1)} м³</Text>
-        </View>
-      )}
     </ScrollView>
   );
 };
@@ -166,13 +148,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
     color: '#fff',
-  },
-  selectedInfo: {
-    marginTop: 20,
-    alignItems: 'center',
-    backgroundColor: '#e6f0ff',
-    padding: 10,
-    borderRadius: 8,
   },
 });
 
