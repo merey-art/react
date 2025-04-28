@@ -1,6 +1,6 @@
-// 🔹 FILE: App.js (SplashScreen с логотипом и анимацией появления и исчезновения)
+// 🔹 FILE: App.js (SplashScreen с текстом без логотипа для теста)
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -43,7 +43,7 @@ function SplashScreen({ onFinish }) {
   return (
     <View style={styles.splashContainer}>
       <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
-        <Image source={require('./assets/DEG Logo Full.png')} style={styles.logo} resizeMode="contain" />
+        <Text style={styles.splashText}>Digital Energy Group</Text>
         <ActivityIndicator size="large" color="#003366" style={{ marginTop: 24 }} />
       </Animated.View>
     </View>
@@ -107,8 +107,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f6f8',
   },
-  logo: {
-    width: 240,
-    height: 100,
+  splashText: {
+    marginTop: 16,
+    fontSize: 22,
+    color: '#003366',
+    fontWeight: 'bold',
   },
 });

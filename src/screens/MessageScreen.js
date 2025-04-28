@@ -79,7 +79,7 @@ export default function MessageScreen() {
           .map((entry) => ({
             ...entry,
             name: deviceMap[entry.device_id]?.name || '—',
-            meter_number: deviceMap[entry.device_id]?.meter_number || '—',
+            meter_number: entry.meter_number?.toString() || '—',
             address: deviceMap[entry.device_id]?.address || '—',
             delta_in1: entry.delta_in1 ?? null,
           }));
