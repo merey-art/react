@@ -1,3 +1,4 @@
+// 🔹 FILE: src/screens/UserScreen.js (обновление подтверждения выхода)
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -70,14 +71,26 @@ export default function UserScreen() {
   }, [fetchUsers]);
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('email');
-    navigation.replace('Login');
+    Alert.alert(
+      'Выход',
+      'Вы уверены, что хотите выйти из аккаунта?',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        {
+          text: 'Выйти',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('email');
+            navigation.replace('LoginScreen');
+          },
+        },
+      ]
+    );
   };
 
   const renderHeader = () => (
     <View style={{ padding: 20 }}>
-      {/* Кнопка выхода по центру */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Выйти из аккаунта</Text>
       </TouchableOpacity>
@@ -129,7 +142,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   logoutButton: {
-    alignSelf: 'center',  // Центрируем кнопку по горизонтали
+    alignSelf: 'center',
     marginBottom: 16,
     backgroundColor: '#ddd',
     paddingVertical: 10,
