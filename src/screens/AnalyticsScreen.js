@@ -1,8 +1,16 @@
-// 🔹 FILE: src/screens/AnalyticsScreen.js (обновлённый)
+// 🔹 FILE: AnalyticsScreen.js (добавлена подпись к линии среднего)
 import React, { useContext, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, Button, Modal } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { VictoryBar, VictoryChart, VictoryTheme, VictoryAxis, VictoryLabel } from 'victory-native';
+import {
+  VictoryBar,
+  VictoryChart,
+  VictoryTheme,
+  VictoryAxis,
+  VictoryLabel,
+  VictoryLine,
+  VictoryLegend,
+} from 'victory-native';
 import { AnalyticsContext } from '../context/AnalyticsContext';
 import moment from 'moment';
 
@@ -18,9 +26,9 @@ const AnalyticsScreen = () => {
   const aggregatedData = useMemo(() => {
     const grouped = {};
     analyticsData.forEach((msg) => {
-      if (typeof msg.datetime !== 'number' || typeof msg.in1 !== 'number') return;
+      if (typeof msg.datetime !== 'number' || typeof msg.in1 !== 'number') {return;}
       const msgDate = moment.unix(msg.datetime);
-      if (msgDate.isBefore(moment(startDate).startOf('day')) || msgDate.isAfter(moment(endDate).endOf('day'))) return;
+      if (msgDate.isBefore(moment(startDate).startOf('day')) || msgDate.isAfter(moment(endDate).endOf('day'))) {return;}
       const date = msgDate.format('YYYY-MM-DD');
       grouped[date] = (grouped[date] || 0) + msg.in1;
     });
@@ -28,7 +36,7 @@ const AnalyticsScreen = () => {
   }, [analyticsData, startDate, endDate]);
 
   const average = useMemo(() => {
-    if (aggregatedData.length === 0) return 0;
+    if (aggregatedData.length === 0) {return 0;}
     const total = aggregatedData.reduce((sum, item) => sum + item.value, 0);
     return total / aggregatedData.length;
   }, [aggregatedData]);
@@ -82,7 +90,7 @@ const AnalyticsScreen = () => {
         width={screenWidth - 16}
       >
         <VictoryAxis
-          tickFormat={(t) => moment(t).format('DD.MM')}
+          tickFormat={(t) => moment(t).format('dd DD.MM')}
           style={{ tickLabels: { angle: -30, fontSize: 10, padding: 15 } }}
         />
         <VictoryAxis
@@ -100,9 +108,19 @@ const AnalyticsScreen = () => {
             data: {
               fill: ({ datum }) => datum.value > 10 ? '#4c9aff' : '#a0c4ff',
               width: 20,
-              cornerRadius: { top: 6, bottom: 0 }
-            }
+              cornerRadius: { top: 6, bottom: 0 },
+            },
           }}
+        />
+        <VictoryLine
+          y={() => average}
+          style={{ data: { stroke: 'tomato', strokeDasharray: '4,4' } }}
+        />
+        <VictoryLabel
+          text={`Среднее: ${average.toFixed(1)} м³`}
+          x={screenWidth * 0.1}
+          y={average}
+          style={{ fill: 'tomato', fontSize: 10 }}
         />
       </VictoryChart>
     </ScrollView>
