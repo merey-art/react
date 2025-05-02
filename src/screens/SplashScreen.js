@@ -1,6 +1,7 @@
 // 🔹 FILE: src/screens/SplashScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, ActivityIndicator, Animated } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import Logo from '../assets/logo.svg'; // Обновлённый путь к SVG логотипу (ты заменишь сам)
 
 export default function SplashScreen({ onFinish }) {
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -18,11 +19,7 @@ export default function SplashScreen({ onFinish }) {
   return (
     <View style={styles.container}>
       <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
-        <Image
-          source={require('../../assets/logo.png')} // Путь к твоему логотипу
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Logo width={260} height={120} />
         <ActivityIndicator size="large" color="#003366" style={{ marginTop: 24 }} />
       </Animated.View>
     </View>
@@ -35,9 +32,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f6f8',
-  },
-  logo: {
-    width: 260,
-    height: 120,
   },
 });
