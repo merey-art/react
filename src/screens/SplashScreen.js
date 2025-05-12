@@ -1,36 +1,29 @@
-// 🔹 FILE: src/screens/SplashScreen.js
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native';
-import Logo from '../assets/logo.svg'; // Обновлённый путь к SVG логотипу (ты заменишь сам)
+import React, { useEffect } from 'react';
+import { ImageBackground, StyleSheet } from 'react-native';
+
+// 📌 Замените путь, если ваш PNG‑файл лежит в другой папке
+import splashImage from '../assets/splash.png';
 
 export default function SplashScreen({ onFinish }) {
-  const fadeAnim = useState(new Animated.Value(0))[0];
-
+  // Переходим дальше через 2 с. При необходимости измените таймер
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-      Animated.delay(1200),
-      Animated.timing(fadeAnim, { toValue: 0, duration: 800, useNativeDriver: true })
-    ]).start(() => {
-      onFinish();
-    });
-  }, [fadeAnim, onFinish]);
+    const timer = setTimeout(onFinish, 2000);
+    return () => clearTimeout(timer);
+  }, [onFinish]);
 
   return (
-    <View style={styles.container}>
-      <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
-        <Logo width={260} height={120} />
-        <ActivityIndicator size="large" color="#003366" style={{ marginTop: 24 }} />
-      </Animated.View>
-    </View>
+      <ImageBackground
+          source={splashImage}
+          style={styles.container}
+          resizeMode="cover" // «contain» — если нужно сохранить пропорции без обрезки
+      />
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f6f8',
+    width: '100%',
+    height: '100%',
   },
 });

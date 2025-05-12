@@ -42,30 +42,92 @@ export default function SignupScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Регистрация</Text>
-        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
-        <TextInput style={styles.input} placeholder="Пароль" value={password} onChangeText={setPassword} secureTextEntry />
-        <TextInput style={styles.input} placeholder="Подтвердите пароль" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
-        <TextInput style={styles.input} placeholder="Ваше имя" value={name} onChangeText={setName} />
-        <TextInput style={styles.input} placeholder="Компания" value={companyName} onChangeText={setCompanyName} />
-        <TouchableOpacity activeOpacity={0.9} style={styles.shadowWrapper} onPress={handleSignup}>
-          <LinearGradient colors={["rgba(0,51,102,1)", "rgba(0,153,153,1)"]} style={styles.loginButton}>
-            <Text style={styles.loginText}>Зарегистрироваться</Text>
-          </LinearGradient>
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>{'<'} Назад</Text>
         </TouchableOpacity>
+
+        <View style={styles.card}>
+          <Text style={styles.title}>Регистрация</Text>
+
+          <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
+          <TextInput style={styles.input} placeholder="Пароль" value={password} onChangeText={setPassword} secureTextEntry />
+          <TextInput style={styles.input} placeholder="Подтвердите пароль" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+          <TextInput style={styles.input} placeholder="Ваше имя" value={name} onChangeText={setName} />
+          <TextInput style={styles.input} placeholder="Компания" value={companyName} onChangeText={setCompanyName} />
+
+          <TouchableOpacity activeOpacity={0.9} style={styles.shadowWrapper} onPress={handleSignup}>
+            <LinearGradient colors={["rgba(0,51,102,1)", "rgba(0,153,153,1)"]} style={styles.loginButton}>
+              <Text style={styles.loginText}>Зарегистрироваться</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6f8', justifyContent: 'center', paddingHorizontal: 32 },
-  card: { backgroundColor: '#fff', padding: 24, borderRadius: 16, ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 }, android: { elevation: 5 } }) },
-  title: { fontSize: 24, fontWeight: 'bold', alignSelf: 'center', marginBottom: 24, color: '#333' },
-  input: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 16, borderColor: '#d1d5db', borderWidth: 1, fontSize: 16 },
-  shadowWrapper: { borderRadius: 16, marginBottom: 16 },
-  loginButton: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  loginText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f6f8',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    left: 16,
+    zIndex: 1,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#007b83',
+  },
+  card: {
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    marginBottom: 24,
+    color: '#333',
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderColor: '#d1d5db',
+    borderWidth: 1,
+    fontSize: 16,
+  },
+  shadowWrapper: {
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  loginButton: {
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
 });
