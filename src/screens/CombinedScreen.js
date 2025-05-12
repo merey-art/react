@@ -10,11 +10,12 @@ import { AnalyticsContext } from '../context/AnalyticsContext';
 
 const screenWidth = Dimensions.get('window').width;
 const BASE_URL = 'https://metering.beeline.kz:4443';
+const DEVICE_LIST_ENDPOINT = '/api/device/metering_devices';
 const DEVICE_MESSAGES_ENDPOINT = '/api/device/messages';
 
 export default function CombinedScreen() {
   const [activeTab, setActiveTab] = useState('graph');
-  return (
+return (
       <View style={styles.container}>
         <View style={styles.tabBar}>
           <TouchableOpacity style={[styles.tab, activeTab === 'graph' && styles.activeTab]} onPress={() => setActiveTab('graph')}>

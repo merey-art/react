@@ -1,6 +1,15 @@
-// 🔹 FILE: src/screens/UserScreen.js (обновление подтверждения выхода)
+// 🔹 FILE: src/screens/UserScreen.js (кнопка выхода внизу)
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Button, FlatList, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
@@ -16,21 +25,23 @@ export default function UserScreen() {
   const [userId, setUserId] = useState('');
   const [users, setUsers] = useState([]);
 
-  const getToken = async () => await AsyncStorage.getItem('token');
+  const getToken = async () => AsyncStorage.getItem('token');
 
   const createUser = async () => {
     try {
       const token = await getToken();
-      const res = await axios.post(`${BASE_URL}/api/user/create`, {
-        name,
-        email,
-        password,
-        password_confirmation: password,
-        user_time_zone: 5,
-        access_group_id: 1
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(
+        `${BASE_URL}/api/user/create`,
+        {
+          name,
+          email,
+          password,
+          password_confirmation: password,
+          user_time_zone: 5,
+          access_group_id: 1,
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       Alert.alert('Пользователь создан', `ID: ${res.data?.data?.id}`);
       setUserId(res.data?.data?.id?.toString() || '');
       fetchUsers();
@@ -42,12 +53,14 @@ export default function UserScreen() {
   const tieUserToObject = async () => {
     try {
       const token = await getToken();
-      await axios.post(`${BASE_URL}/api/objects/tie_users`, {
-        object_id: objectId,
-        user_ids: [parseInt(userId)]
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(
+        `${BASE_URL}/api/objects/tie_users`,
+        {
+          object_id: objectId,
+          user_ids: [parseInt(userId, 10)],
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       Alert.alert('Пользователь привязан к объекту');
     } catch (err) {
       Alert.alert('Ошибка привязки', err.response?.data?.error?.msg || 'Ошибка привязки пользователя');
@@ -57,9 +70,11 @@ export default function UserScreen() {
   const fetchUsers = useCallback(async () => {
     try {
       const token = await getToken();
-      const res = await axios.post(`${BASE_URL}/api/company/users`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(
+        `${BASE_URL}/api/company/users`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       setUsers(res.data?.data?.users || []);
     } catch (err) {
       console.log('Ошибка загрузки пользователей', err.message);
@@ -71,30 +86,22 @@ export default function UserScreen() {
   }, [fetchUsers]);
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Выход',
-      'Вы уверены, что хотите выйти из аккаунта?',
-      [
-        { text: 'Отмена', style: 'cancel' },
-        {
-          text: 'Выйти',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.removeItem('token');
-            await AsyncStorage.removeItem('email');
-            navigation.replace('LoginScreen');
-          },
+    Alert.alert('Выход', 'Вы уверены, что хотите выйти из аккаунта?', [
+      { text: 'Отмена', style: 'cancel' },
+      {
+        text: 'Выйти',
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.removeItem('token');
+          await AsyncStorage.removeItem('email');
+          navigation.replace('LoginScreen');
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const renderHeader = () => (
     <View style={{ padding: 20 }}>
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Выйти из аккаунта</Text>
-      </TouchableOpacity>
-
       <Text>Имя</Text>
       <TextInput value={name} onChangeText={setName} style={styles.input} />
 
@@ -118,11 +125,20 @@ export default function UserScreen() {
     </View>
   );
 
+  const renderFooter = () => (
+    <View style={{ paddingVertical: 30 }}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Выйти из аккаунта</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <FlatList
       data={users}
       keyExtractor={(item) => item.id.toString()}
       ListHeaderComponent={renderHeader}
+      ListFooterComponent={renderFooter}
       contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
       renderItem={({ item }) => (
         <Text style={{ marginBottom: 5 }}>
@@ -143,7 +159,6 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     alignSelf: 'center',
-    marginBottom: 16,
     backgroundColor: '#ddd',
     paddingVertical: 10,
     paddingHorizontal: 16,
